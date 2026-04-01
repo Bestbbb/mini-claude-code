@@ -43,6 +43,19 @@ program
   .action(async (prompt, options) => {
     let apiKey = options.apiKey || process.env.ANTHROPIC_API_KEY;
 
+    // Available models for DashScope Anthropic proxy
+    const AVAILABLE_MODELS = [
+      { name: "kimi-k2.5",              provider: "Kimi",    desc: "Kimi K2.5 (推荐)" },
+      { name: "qwen3.5-plus",           provider: "千问",    desc: "Qwen 3.5 Plus" },
+      { name: "qwen3-max-2026-01-23",   provider: "千问",    desc: "Qwen 3 Max" },
+      { name: "qwen3-coder-next",       provider: "千问",    desc: "Qwen 3 Coder Next" },
+      { name: "qwen3-coder-plus",       provider: "千问",    desc: "Qwen 3 Coder Plus" },
+      { name: "glm-5",                  provider: "智谱",    desc: "GLM 5" },
+      { name: "glm-4.7",               provider: "智谱",    desc: "GLM 4.7" },
+      { name: "MiniMax-M2.5",          provider: "MiniMax", desc: "MiniMax M2.5" },
+    ];
+    const DEFAULT_MODEL = "kimi-k2.5";
+
     // Interactive setup if no API key found
     if (!apiKey) {
       const readline = await import("node:readline");
@@ -64,9 +77,24 @@ program
         process.env.ANTHROPIC_BASE_URL = baseUrlInput.trim();
       }
 
-      const modelInput = await ask("  MODEL (press Enter for default): ");
-      if (modelInput.trim()) {
-        process.env.MODEL = modelInput.trim();
+      // Show model selection
+      console.log("\n  Available models:");
+      AVAILABLE_MODELS.forEach((m, i) => {
+        const marker = m.name === DEFAULT_MODEL ? " (default)" : "";
+        console.log(`    ${i + 1}. ${m.name.padEnd(24)} [${m.provider}] ${m.desc}${marker}`);
+      });
+
+      const modelInput = await ask(`\n  Choose model (1-${AVAILABLE_MODELS.length}, or name, Enter for ${DEFAULT_MODEL}): `);
+      const trimmedModel = modelInput.trim();
+      if (trimmedModel) {
+        const num = parseInt(trimmedModel);
+        if (num >= 1 && num <= AVAILABLE_MODELS.length) {
+          process.env.MODEL = AVAILABLE_MODELS[num - 1]!.name;
+        } else {
+          process.env.MODEL = trimmedModel;
+        }
+      } else {
+        process.env.MODEL = DEFAULT_MODEL;
       }
 
       // Offer to save to .env
@@ -75,7 +103,7 @@ program
         const { writeFileSync } = await import("node:fs");
         const lines = [`ANTHROPIC_API_KEY=${apiKey}`];
         if (baseUrlInput.trim()) lines.push(`ANTHROPIC_BASE_URL=${baseUrlInput.trim()}`);
-        if (modelInput.trim()) lines.push(`MODEL=${modelInput.trim()}`);
+        lines.push(`MODEL=${process.env.MODEL}`);
         writeFileSync(".env", lines.join("\n") + "\n");
         console.log("  Saved to .env\n");
       }
@@ -90,11 +118,10 @@ program
     const settings = loadSettings(session.projectRoot);
 
     // Model priority: CLI flag > env > settings > default
-    const defaultModel = "claude-sonnet-4-20250514";
     const model = options.model
       || process.env.MODEL
       || settings.model
-      || defaultModel;
+      || DEFAULT_MODEL;
 
     let permissionMode: PermissionMode = "default";
     if (options.dangerouslySkipPermissions) {
