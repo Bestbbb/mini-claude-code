@@ -27,7 +27,7 @@ export function MessageList({ messages, streamingText, activeToolName }: Message
         <Box flexDirection="column">
           <Text color="greenBright" bold>{"🤖 Assistant "}</Text>
           <Box marginLeft={3}>
-            <Text color="white">{streamingText}</Text>
+            <Text>{streamingText}</Text>
           </Box>
         </Box>
       )}
@@ -57,7 +57,7 @@ function UserMessageView({ message }: { message: { role: "user"; content: string
       <Box flexDirection="column">
         <Text color="blueBright" bold>{"👤 You "}</Text>
         <Box marginLeft={3}>
-          <Text color="whiteBright">{message.content}</Text>
+          <Text>{message.content}</Text>
         </Box>
       </Box>
     );
@@ -94,7 +94,7 @@ function AssistantMessageView({ message }: { message: { role: "assistant"; conte
         <Box key={`text-${i}`} flexDirection="column">
           {i === 0 && <Text color="greenBright" bold>{"🤖 Assistant "}</Text>}
           <Box marginLeft={3}>
-            <Text color="white">{block.text}</Text>
+            <Text>{block.text}</Text>
           </Box>
         </Box>
       ))}

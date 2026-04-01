@@ -102,7 +102,7 @@ export function PromptInput({ onSubmit, disabled = false }: PromptInputProps) {
         {disabled ? (
           <Text color="gray" dimColor italic>waiting for response...</Text>
         ) : (
-          <Text color="whiteBright" bold>
+          <Text>
             {value}
             <Text color="cyanBright">█</Text>
           </Text>
