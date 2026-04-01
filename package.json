@@ -1,6 +1,6 @@
 {
   "name": "@xzwtlb/mini-claude-code",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "~5000 line TypeScript reproduction of Claude Code's core agentic architecture",
   "type": "module",
   "bin": {

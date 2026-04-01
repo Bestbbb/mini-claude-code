@@ -1,6 +1,19 @@
 #!/usr/bin/env node
+import { resolve } from "node:path";
+import { homedir } from "node:os";
+import { existsSync, mkdirSync } from "node:fs";
 import { config } from "dotenv";
-config({ quiet: true } as any); // Load .env silently
+
+// Config dir: ~/.mini-claude-code/
+const CONFIG_DIR = resolve(homedir(), ".mini-claude-code");
+const CONFIG_ENV = resolve(CONFIG_DIR, ".env");
+
+// Load .env from fixed config dir first, then cwd as fallback
+if (existsSync(CONFIG_ENV)) {
+  config({ path: CONFIG_ENV, quiet: true } as any);
+} else {
+  config({ quiet: true } as any);
+}
 
 import React from "react";
 import { render } from "ink";
@@ -26,12 +39,25 @@ import "./commands/config.js";
 import "./commands/resume.js";
 import "./commands/sessions.js";
 
+// Available models for DashScope Anthropic proxy
+const AVAILABLE_MODELS = [
+  { name: "kimi-k2.5",              provider: "Kimi",    desc: "Kimi K2.5 (推荐)" },
+  { name: "qwen3.5-plus",           provider: "千问",    desc: "Qwen 3.5 Plus" },
+  { name: "qwen3-max-2026-01-23",   provider: "千问",    desc: "Qwen 3 Max" },
+  { name: "qwen3-coder-next",       provider: "千问",    desc: "Qwen 3 Coder Next" },
+  { name: "qwen3-coder-plus",       provider: "千问",    desc: "Qwen 3 Coder Plus" },
+  { name: "glm-5",                  provider: "智谱",    desc: "GLM 5" },
+  { name: "glm-4.7",               provider: "智谱",    desc: "GLM 4.7" },
+  { name: "MiniMax-M2.5",          provider: "MiniMax", desc: "MiniMax M2.5" },
+];
+const DEFAULT_MODEL = "kimi-k2.5";
+
 const program = new Command();
 
 program
   .name("mini-claude-code")
   .description("Minimal reproduction of Claude Code's core architecture")
-  .version("0.1.0")
+  .version("0.1.2")
   .option("-m, --model <model>", "Model to use")
   .option("-p, --print <prompt>", "Non-interactive mode: run prompt and exit")
   .option("--dangerously-skip-permissions", "Skip all permission checks (bypass mode)")
@@ -42,19 +68,6 @@ program
   .argument("[prompt]", "Initial prompt to send")
   .action(async (prompt, options) => {
     let apiKey = options.apiKey || process.env.ANTHROPIC_API_KEY;
-
-    // Available models for DashScope Anthropic proxy
-    const AVAILABLE_MODELS = [
-      { name: "kimi-k2.5",              provider: "Kimi",    desc: "Kimi K2.5 (推荐)" },
-      { name: "qwen3.5-plus",           provider: "千问",    desc: "Qwen 3.5 Plus" },
-      { name: "qwen3-max-2026-01-23",   provider: "千问",    desc: "Qwen 3 Max" },
-      { name: "qwen3-coder-next",       provider: "千问",    desc: "Qwen 3 Coder Next" },
-      { name: "qwen3-coder-plus",       provider: "千问",    desc: "Qwen 3 Coder Plus" },
-      { name: "glm-5",                  provider: "智谱",    desc: "GLM 5" },
-      { name: "glm-4.7",               provider: "智谱",    desc: "GLM 4.7" },
-      { name: "MiniMax-M2.5",          provider: "MiniMax", desc: "MiniMax M2.5" },
-    ];
-    const DEFAULT_MODEL = "kimi-k2.5";
 
     // Interactive setup if no API key found
     if (!apiKey) {
@@ -97,15 +110,16 @@ program
         process.env.MODEL = DEFAULT_MODEL;
       }
 
-      // Offer to save to .env
-      const save = await ask("\n  Save to .env for next time? (Y/n): ");
+      // Save to ~/.mini-claude-code/.env
+      const save = await ask("\n  Save to ~/.mini-claude-code/.env for next time? (Y/n): ");
       if (!save.trim() || save.trim().toLowerCase() === "y") {
         const { writeFileSync } = await import("node:fs");
+        mkdirSync(CONFIG_DIR, { recursive: true });
         const lines = [`ANTHROPIC_API_KEY=${apiKey}`];
         if (baseUrlInput.trim()) lines.push(`ANTHROPIC_BASE_URL=${baseUrlInput.trim()}`);
         lines.push(`MODEL=${process.env.MODEL}`);
-        writeFileSync(".env", lines.join("\n") + "\n");
-        console.log("  Saved to .env\n");
+        writeFileSync(CONFIG_ENV, lines.join("\n") + "\n");
+        console.log(`  Saved to ${CONFIG_ENV}\n`);
       }
 
       rl.close();
