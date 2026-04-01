@@ -1,6 +1,6 @@
 {
   "name": "@xzwtlb/mini-claude-code",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Claude Code core architecture reproduction. Supports DashScope (Kimi/Qwen/GLM/MiniMax) via Anthropic-compatible API.",
   "type": "module",
   "bin": {

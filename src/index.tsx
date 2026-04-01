@@ -85,10 +85,9 @@ program
       }
       apiKey = apiKey.trim();
 
-      const baseUrlInput = await ask("  ANTHROPIC_BASE_URL (press Enter to skip): ");
-      if (baseUrlInput.trim()) {
-        process.env.ANTHROPIC_BASE_URL = baseUrlInput.trim();
-      }
+      const DEFAULT_BASE_URL = "https://coding.dashscope.aliyuncs.com/apps/anthropic";
+      const baseUrlInput = await ask(`  ANTHROPIC_BASE_URL (Enter for DashScope): `);
+      process.env.ANTHROPIC_BASE_URL = baseUrlInput.trim() || DEFAULT_BASE_URL;
 
       // Show model selection
       console.log("\n  Available models:");
@@ -116,7 +115,7 @@ program
         const { writeFileSync } = await import("node:fs");
         mkdirSync(CONFIG_DIR, { recursive: true });
         const lines = [`ANTHROPIC_API_KEY=${apiKey}`];
-        if (baseUrlInput.trim()) lines.push(`ANTHROPIC_BASE_URL=${baseUrlInput.trim()}`);
+        lines.push(`ANTHROPIC_BASE_URL=${process.env.ANTHROPIC_BASE_URL}`);
         lines.push(`MODEL=${process.env.MODEL}`);
         writeFileSync(CONFIG_ENV, lines.join("\n") + "\n");
         console.log(`  Saved to ${CONFIG_ENV}\n`);
@@ -125,7 +124,7 @@ program
       rl.close();
     }
 
-    const baseUrl = options.baseUrl || process.env.ANTHROPIC_BASE_URL || undefined;
+    const baseUrl = options.baseUrl || process.env.ANTHROPIC_BASE_URL || "https://coding.dashscope.aliyuncs.com/apps/anthropic";
 
     // Initialize session
     const session = initSession();
