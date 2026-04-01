@@ -9,7 +9,6 @@ import type {
   DisplayMessage,
   CommandMessage,
 } from "../types.js";
-import { ToolResultView } from "./ToolResultView.js";
 import { CommandOutput } from "./CommandOutput.js";
 
 type MessageListProps = {
@@ -26,25 +25,25 @@ export function MessageList({ messages, streamingText, activeToolName }: Message
       ))}
       {streamingText && (
         <Box flexDirection="column">
-          <Text color="green" bold>Claude: </Text>
-          <Text>{streamingText}</Text>
+          <Text color="greenBright" bold>{"🤖 Assistant "}</Text>
+          <Box marginLeft={3}>
+            <Text color="white">{streamingText}</Text>
+          </Box>
         </Box>
       )}
       {activeToolName && !streamingText && (
-        <Text color="cyan">Running {activeToolName}...</Text>
+        <Text color="cyanBright" bold>{"  ⏳ "}{activeToolName}...</Text>
       )}
     </Box>
   );
 }
 
 function MessageView({ message }: { message: DisplayMessage }) {
-  // Command messages
   if ("type" in message && (message as CommandMessage).type === "command") {
     const cmd = message as CommandMessage;
     return <CommandOutput command={cmd.command} output={cmd.output} />;
   }
 
-  // Regular messages
   const msg = message as Message;
   if (msg.role === "user") {
     return <UserMessageView message={msg} />;
@@ -55,22 +54,26 @@ function MessageView({ message }: { message: DisplayMessage }) {
 function UserMessageView({ message }: { message: { role: "user"; content: string | ContentBlock[] } }) {
   if (typeof message.content === "string") {
     return (
-      <Box>
-        <Text color="blue" bold>You: </Text>
-        <Text>{message.content}</Text>
+      <Box flexDirection="column">
+        <Text color="blueBright" bold>{"👤 You "}</Text>
+        <Box marginLeft={3}>
+          <Text color="whiteBright">{message.content}</Text>
+        </Box>
       </Box>
     );
   }
 
-  // Tool results — show with enhanced rendering
   const toolResults = message.content.filter((b): b is ToolResultBlock => b.type === "tool_result");
   if (toolResults.length > 0) {
     return (
       <Box flexDirection="column">
         {toolResults.map((tr, i) => (
-          <Box key={i} flexDirection="column">
-            <Text color={tr.is_error ? "red" : "gray"} dimColor>
-              {tr.is_error ? "✗ Tool error" : "✓ Tool result"} ({tr.content.length} chars)
+          <Box key={i} marginLeft={3}>
+            <Text color={tr.is_error ? "redBright" : "greenBright"} bold>
+              {tr.is_error ? "  ✗ " : "  ✓ "}
+            </Text>
+            <Text color={tr.is_error ? "red" : "gray"}>
+              {tr.is_error ? "Error" : "Result"} ({tr.content.length} chars)
             </Text>
           </Box>
         ))}
@@ -85,23 +88,22 @@ function AssistantMessageView({ message }: { message: { role: "assistant"; conte
   const textBlocks = message.content.filter((b): b is TextBlock => b.type === "text");
   const toolUseBlocks = message.content.filter((b): b is ToolUseBlock => b.type === "tool_use");
 
-  // Find matching tool results from the next user message (if available in context)
-  // For now we just show tool use blocks without their results inline
-
   return (
     <Box flexDirection="column">
       {textBlocks.map((block, i) => (
         <Box key={`text-${i}`} flexDirection="column">
-          {i === 0 && <Text color="green" bold>Claude: </Text>}
-          <Text>{block.text}</Text>
+          {i === 0 && <Text color="greenBright" bold>{"🤖 Assistant "}</Text>}
+          <Box marginLeft={3}>
+            <Text color="white">{block.text}</Text>
+          </Box>
         </Box>
       ))}
       {toolUseBlocks.map((block, i) => (
-        <Box key={`tool-${i}`} marginLeft={2}>
-          <Text color="yellow">
-            ⚡ {block.name}
-            <Text color="gray"> {formatToolInput(block.input)}</Text>
+        <Box key={`tool-${i}`} marginLeft={3}>
+          <Text color="yellowBright" bold>
+            {"  ⚡ "}{block.name}
           </Text>
+          <Text color="gray"> {formatToolInput(block.input)}</Text>
         </Box>
       ))}
     </Box>
@@ -109,7 +111,6 @@ function AssistantMessageView({ message }: { message: { role: "assistant"; conte
 }
 
 function formatToolInput(input: Record<string, unknown>): string {
-  // Type-specific formatting
   if (typeof input.command === "string") {
     return `$ ${truncate(input.command, 80)}`;
   }

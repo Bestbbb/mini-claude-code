@@ -19,8 +19,8 @@ export function Spinner({ label = "Thinking..." }: SpinnerProps) {
   }, []);
 
   return (
-    <Text color="cyan">
-      {FRAMES[frame]} {label}
+    <Text color="cyanBright" bold>
+      {"  "}{FRAMES[frame]} {label}
     </Text>
   );
 }

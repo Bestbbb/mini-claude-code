@@ -261,11 +261,17 @@ export function App({
   return (
     <Box flexDirection="column" paddingX={1}>
       {/* Header */}
-      <Box marginBottom={1}>
-        <Text color="magenta" bold>
-          mini-claude-code
+      <Box marginBottom={1} flexDirection="column">
+        <Text color="cyanBright" bold>
+          {"╭─ "}mini-claude-code{" ─╮"}
         </Text>
-        <Text color="gray"> ({currentModel})</Text>
+        <Text color="gray">
+          {"│ "}model: <Text color="yellowBright" bold>{currentModel}</Text>
+          {"  │ "}/help for commands
+        </Text>
+        <Text color="cyanBright" bold>
+          {"╰──────────────────╯"}
+        </Text>
       </Box>
 
       {/* Message List */}

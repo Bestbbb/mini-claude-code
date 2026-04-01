@@ -7,10 +7,6 @@ type CostDisplayProps = {
   model: string;
 };
 
-/**
- * Status bar showing token usage and estimated cost.
- * Mirrors Claude Code's footer/status bar components.
- */
 export function CostDisplay({ tokenTracker, model }: CostDisplayProps) {
   const totals = tokenTracker.getTotals();
   const cost = tokenTracker.getEstimatedCost();
@@ -18,15 +14,15 @@ export function CostDisplay({ tokenTracker, model }: CostDisplayProps) {
 
   if (calls === 0) return null;
 
-  const modelShort = model.includes("opus") ? "opus" :
-                     model.includes("haiku") ? "haiku" :
-                     model.includes("sonnet") ? "sonnet" : model.slice(0, 15);
-
   return (
-    <Box>
-      <Text color="gray" dimColor>
-        {modelShort} · {formatTokens(totals.inputTokens + totals.outputTokens)} tokens · ${cost.toFixed(4)} · {calls} API call{calls !== 1 ? "s" : ""}
-      </Text>
+    <Box marginTop={1}>
+      <Text color="gray">{"──── "}</Text>
+      <Text color="yellowBright" bold>{model}</Text>
+      <Text color="gray">{" · "}</Text>
+      <Text color="cyanBright">{formatTokens(totals.inputTokens + totals.outputTokens)} tokens</Text>
+      <Text color="gray">{" · "}</Text>
+      <Text color="greenBright" bold>${cost.toFixed(4)}</Text>
+      <Text color="gray">{" · "}{calls} call{calls !== 1 ? "s" : ""}</Text>
     </Box>
   );
 }
