@@ -40,11 +40,47 @@ program
   .option("--base-url <url>", "Custom API base URL (or set ANTHROPIC_BASE_URL env var)")
   .option("--resume [sessionId]", "Resume a previous session")
   .argument("[prompt]", "Initial prompt to send")
-  .action((prompt, options) => {
-    const apiKey = options.apiKey || process.env.ANTHROPIC_API_KEY;
+  .action(async (prompt, options) => {
+    let apiKey = options.apiKey || process.env.ANTHROPIC_API_KEY;
+
+    // Interactive setup if no API key found
     if (!apiKey) {
-      console.error("Error: Set ANTHROPIC_API_KEY in .env or pass --api-key flag.");
-      process.exit(1);
+      const readline = await import("node:readline");
+      const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+      const ask = (q: string): Promise<string> => new Promise((res) => rl.question(q, res));
+
+      console.log("\n  Welcome to mini-claude-code!\n");
+      console.log("  No API key found. Let's set one up.\n");
+
+      apiKey = await ask("  ANTHROPIC_API_KEY: ");
+      if (!apiKey.trim()) {
+        console.error("\n  API key is required. Set ANTHROPIC_API_KEY in .env or pass --api-key.");
+        process.exit(1);
+      }
+      apiKey = apiKey.trim();
+
+      const baseUrlInput = await ask("  ANTHROPIC_BASE_URL (press Enter to skip): ");
+      if (baseUrlInput.trim()) {
+        process.env.ANTHROPIC_BASE_URL = baseUrlInput.trim();
+      }
+
+      const modelInput = await ask("  MODEL (press Enter for default): ");
+      if (modelInput.trim()) {
+        process.env.MODEL = modelInput.trim();
+      }
+
+      // Offer to save to .env
+      const save = await ask("\n  Save to .env for next time? (Y/n): ");
+      if (!save.trim() || save.trim().toLowerCase() === "y") {
+        const { writeFileSync } = await import("node:fs");
+        const lines = [`ANTHROPIC_API_KEY=${apiKey}`];
+        if (baseUrlInput.trim()) lines.push(`ANTHROPIC_BASE_URL=${baseUrlInput.trim()}`);
+        if (modelInput.trim()) lines.push(`MODEL=${modelInput.trim()}`);
+        writeFileSync(".env", lines.join("\n") + "\n");
+        console.log("  Saved to .env\n");
+      }
+
+      rl.close();
     }
 
     const baseUrl = options.baseUrl || process.env.ANTHROPIC_BASE_URL || undefined;
